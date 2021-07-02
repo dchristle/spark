@@ -5,11 +5,15 @@ on:
     branches:
     - '**'
     - '!branch-*.*'
-  schedule:
-    # master
-    - cron: '0 4 * * *'
-    # branch-3.2
-    - cron: '0 7 * * *'
+    - branch-3.2
+  pull_request:
+    branches:
+    - branch-3.2
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Target branch to run'
+        required: true
 
 jobs:
   configure-jobs:
