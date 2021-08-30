@@ -87,48 +87,6 @@ class NettyBlockTransferServiceSuite
     verifyServicePort(expectedPort = service0.port + 1, actualPort = service1.port)
   }
 
-  test("SPARK-27637: test fetch block with executor dead") {
-    implicit val executionContext = ExecutionContext.global
-    val port = 17634 + Random.nextInt(10000)
-    logInfo("random port for test: " + port)
-
-    val driverEndpointRef = new RpcEndpointRef(new SparkConf()) {
-      override def address: RpcAddress = null
-      override def name: String = "test"
-      override def send(message: Any): Unit = {}
-      // This rpcEndPointRef always return false for unit test to touch ExecutorDeadException.
-      override def ask[T: ClassTag](message: Any, timeout: RpcTimeout): Future[T] = {
-        Future{false.asInstanceOf[T]}
-      }
-    }
-
-    val clientFactory = mock(classOf[TransportClientFactory])
-    val client = mock(classOf[TransportClient])
-    // This is used to touch an IOException during fetching block.
-    when(client.sendRpc(any(), any())).thenAnswer(_ => {throw new IOException()})
-    var createClientCount = 0
-    when(clientFactory.createClient(any(), any(), any())).thenAnswer(_ => {
-      createClientCount += 1
-      client
-    })
-
-    val listener = mock(classOf[BlockFetchingListener])
-    var hitExecutorDeadException = false
-    when(listener.onBlockTransferFailure(any(), any(classOf[ExecutorDeadException])))
-      .thenAnswer(_ => {hitExecutorDeadException = true})
-
-    service0 = createService(port, driverEndpointRef)
-    val clientFactoryField = service0.getClass
-      .getSuperclass.getSuperclass.getDeclaredField("clientFactory")
-    clientFactoryField.setAccessible(true)
-    clientFactoryField.set(service0, clientFactory)
-
-    service0.fetchBlocks("localhost", port, "exec1",
-      Array("block1"), listener, mock(classOf[DownloadFileManager]))
-    assert(createClientCount === 1)
-    assert(hitExecutorDeadException)
-  }
-
   private def verifyServicePort(expectedPort: Int, actualPort: Int): Unit = {
     actualPort should be >= expectedPort
     // avoid testing equality in case of simultaneous tests
