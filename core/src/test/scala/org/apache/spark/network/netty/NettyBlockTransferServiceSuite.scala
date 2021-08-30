@@ -17,23 +17,16 @@
 
 package org.apache.spark.network.netty
 
-import java.io.IOException
-
-import scala.concurrent.{ExecutionContext, Future}
-import scala.reflect.ClassTag
 import scala.util.Random
 
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito.{mock, when}
+import org.mockito.Mockito.mock
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.matchers.should.Matchers._
 
-import org.apache.spark.{ExecutorDeadException, SecurityManager, SparkConf, SparkFunSuite}
+import org.apache.spark.{SecurityManager, SparkConf, SparkFunSuite}
 import org.apache.spark.network.BlockDataManager
-import org.apache.spark.network.client.{TransportClient, TransportClientFactory}
-import org.apache.spark.network.shuffle.{BlockFetchingListener, DownloadFileManager}
-import org.apache.spark.rpc.{RpcAddress, RpcEndpointRef, RpcTimeout}
+import org.apache.spark.rpc.RpcEndpointRef
 
 class NettyBlockTransferServiceSuite
   extends SparkFunSuite
